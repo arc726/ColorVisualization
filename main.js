@@ -19,6 +19,23 @@ controls.rotateSpeed = 0.5; // set rotate speed
 var loader = new GLTFLoader();
 loader.load('scene.gltf', function (gltf) {
     gltf.scene.rotation.y = Math.PI / 2; 
+    gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+            if (node.name.includes("Carpaint_Main") && !node.name.includes("RIM")) {
+                // get the existing material
+        var material = node.material;
+        // get the current color of the material
+        var baseColor = material.color;
+        // set the tint color
+        var tintColor = new THREE.Color(0x00ff00); // set to green
+        // multiply the base color and tint color to produce the new color
+        material.color = baseColor.clone().multiply(tintColor);
+            }
+        }
+    });
+    
+    
+    
     scene.add(gltf.scene);
 });
 
