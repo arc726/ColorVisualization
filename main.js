@@ -2,7 +2,17 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
+var gui = new dat.GUI();
 var scene = new THREE.Scene();
+
+var carModel;
+
+var materialParams = {
+  color: 0xff0000, // initial color
+  metalness: 0.5, // initial metalness
+  roughness: 0.5, // initial roughness
+};
+
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -23,23 +33,9 @@ controls.rotateSpeed = 0.5; // set rotate speed
 
 var loader = new GLTFLoader();
 loader.load("scene.gltf", function (gltf) {
-  gltf.scene.rotation.y = Math.PI / 2;
-  gltf.scene.traverse(function (node) {
-    if (node.isMesh) {
-      if (node.name.includes("Carpaint_Main") && !node.name.includes("RIM")) {
-        // get the existing material
-        var material = node.material;
-        // get the current color of the material
-        var baseColor = material.color;
-        // set the tint color
-        var tintColor = new THREE.Color(0x00ff00); // set to green
-        // multiply the base color and tint color to produce the new color
-        material.color = baseColor.clone().multiply(tintColor);
-      }
-    }
-  });
-
-  scene.add(gltf.scene);
+  carModel = gltf.scene;
+  carModel.rotation.y = Math.PI / 2;
+  scene.add(carModel);
 });
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -50,6 +46,23 @@ directionalLight.position.set(0, 1, 0); // set light direction
 scene.add(directionalLight);
 
 scene.background = new THREE.Color(0x999999);
+
+function updateMaterial() {
+  carModel.traverse(function (child) {
+    if (child.isMesh) {
+      if (child.name.includes("Carpaint_Main") && !child.name.includes("RIM")) {
+        child.material.color.set(materialParams.color);
+        child.material.metalness = materialParams.metalness;
+        child.material.roughness = materialParams.roughness;
+      }
+    }
+  });
+  renderer.render(scene, camera);
+}
+
+gui.addColor(materialParams, "color").onChange(updateMaterial);
+gui.add(materialParams, "metalness", 0, 1).onChange(updateMaterial);
+gui.add(materialParams, "roughness", 0, 1).onChange(updateMaterial);
 
 function animate() {
   requestAnimationFrame(animate);
